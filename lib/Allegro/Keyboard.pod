@@ -1,0 +1,367 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro::Keyboard - Allegro keyboard object
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   $al = Allegro->new() or die;
+   $d  = $al->Display() or die;
+
+   $kb = $al->Keyboard() or die;
+
+   $key = "";
+
+   while($key ne 'escape')
+   {
+      $key = $kb->read;
+      print "$key\n";
+   }
+
+=head1 DESCRIPTION
+
+The Allegro::Keyboard module provides an interface to the Allegro keyboard 
+routines.
+
+=head1 METHODS
+
+=over
+
+=item B<new> - create a new keyboard object
+
+Initializes the Allegro keyboard subsystem.  Only one keyboard object may 
+exist at once with Allegro v4.
+
+   $kb = $al->Keyboard(mode => $mode);
+
+I<mode> may be C<key>, C<ascii>, or C<both>.  This will be the default 
+return mode for B<read>.  The default is C<key>.
+
+=item B<read> - read from key buffer
+
+Reads the current key from the key buffer.
+
+   $key   = $kb->read(mode => 'key');
+   $ascii = $kb->read(mode => 'ascii');
+
+I<mode> may be either C<key> or C<ascii> to return either the key name of
+the pressed key or an ASCII equivalent.  Not all keys will have a useful
+ASCII value.
+
+For example, holding shift and hitting the 4 key will set $key to C<4> and
+$ascii to C<$>.  Hitting F1 will return $key as C<f1> and no ASCII value.
+
+   @key = $kb->read(mode => 'both');
+
+If I<mode> is set to C<both>, an array containing the key name and ASCII 
+value will be returned.
+
+I<mode> defaults to whatever was passed into B<new>.
+
+This method will block if there are no keys available in the key buffer.
+
+=item B<pressed> - check if a key is pressed
+
+Checks if either a specific key is pressed or any key is presssed.
+
+   exit if($kb->pressed('escape'));
+
+If B<pressed> is given a parameter, it should be one of the key names 
+listed below.
+
+   while(!$kb->pressed()) { ... }
+
+If no parameter is supplied, B<pressed> will return a true value if there
+are any keys in the key buffer.
+
+=item B<simulate> - simulate a key press
+
+Simulates a key being pressed by inserting the key into the key buffer.  
+Can take any number of key names.
+
+   $kb->simulate('space', ...);
+
+Valid keys are listed below.
+
+=item B<clear> - clear keyboard buffer
+
+Clears any remaining keys in the keyboard buffer.
+
+   $kb->clear;
+
+This will not affect the results of C<< $kb->pressed($key) >>;  it will 
+only affect calls to C<< $kb->read >> or C<< $kb->pressed() >>.
+
+=back
+
+=head1 KEY NAMES
+
+The following key names will be returned by B<read> in C<key> mode, and 
+are valid key values to be passed to B<pressed> or B<simulate>.
+
+Key names listed in parentheses are aliases, and may be used with 
+B<pressed> or B<simulate>.  They however, will never be returned by 
+B<read>, so the first listed name must be used when checking on returned
+key names from B<read> in C<key> mode.
+
+=over
+
+=item I<a>
+
+=item I<b>
+
+=item I<c>
+
+=item I<d>
+
+=item I<e>
+
+=item I<f>
+
+=item I<g>
+
+=item I<h>
+
+=item I<i>
+
+=item I<j>
+
+=item I<k>
+
+=item I<l>
+
+=item I<m>
+
+=item I<n>
+
+=item I<o>
+
+=item I<p>
+
+=item I<q>
+
+=item I<r>
+
+=item I<s>
+
+=item I<t>
+
+=item I<u>
+
+=item I<v>
+
+=item I<w>
+
+=item I<x>
+
+=item I<y>
+
+=item I<z>
+
+=item I<0>
+
+=item I<1>
+
+=item I<2>
+
+=item I<3>
+
+=item I<4>
+
+=item I<5>
+
+=item I<6>
+
+=item I<7>
+
+=item I<8>
+
+=item I<9>
+
+=item I<0_pad>
+
+=item I<1_pad>
+
+=item I<2_pad>
+
+=item I<3_pad>
+
+=item I<4_pad>
+
+=item I<5_pad>
+
+=item I<6_pad>
+
+=item I<7_pad>
+
+=item I<8_pad>
+
+=item I<9_pad>
+
+=item I<f1>
+
+=item I<f2>
+
+=item I<f3>
+
+=item I<f4>
+
+=item I<f5>
+
+=item I<f6>
+
+=item I<f7>
+
+=item I<f8>
+
+=item I<f9>
+
+=item I<f10>
+
+=item I<f11>
+
+=item I<f12>
+
+=item I<escape> (I<esc>)
+
+=item I<tilde> (I<~>)
+
+=item I<minus> (I<->)
+
+=item I<equals> (I<=>)
+
+=item I<backspace>
+
+=item I<tab>
+
+=item I<openbrace> (I<[>)
+
+=item I<closebrace> (I<]>)
+
+=item I<enter> (I<\r>) (I<\n>)
+
+=item I<colon> (I<:>)
+
+=item I<quote> (I<">)
+
+=item I<backslash> (I<\>)
+
+=item I<backslash2>
+
+=item I<comma> (I<,>)
+
+=item I<period> (I<.>)
+
+=item I<slash> (I</>)
+
+=item I<space> (I< >)
+
+=item I<insert> (I<ins>)
+
+=item I<delete> (I<del>)
+
+=item I<home>
+
+=item I<end>
+
+=item I<pageup>
+
+=item I<pagedown>
+
+=item I<left>
+
+=item I<right>
+
+=item I<up>
+
+=item I<down>
+
+=item I<slash_pad>
+
+=item I<asterisk_pad> (I<asterisk>) (I<*>)
+
+=item I<minus_pad>
+
+=item I<plus_pad>
+
+=item I<delete_pad>
+
+=item I<enter_pad>
+
+=item I<printscreen>
+
+=item I<pause>
+
+=item I<abnt_c1>
+
+=item I<yen>
+
+=item I<kana>
+
+=item I<convert>
+
+=item I<noconvert>
+
+=item I<at>
+
+=item I<circumflex>
+
+=item I<colon2>
+
+=item I<kanji>
+
+=item I<leftshift> (I<lshift>)
+
+=item I<rightshift> (I<rshift>)
+
+=item I<leftcontrol> (I<lcontrol>) (I<lctrl>)
+
+=item I<rightcontrol> (I<rcontrol>) (I<rctrl>)
+
+=item I<alt>
+
+=item I<altgr>
+
+=item I<leftwin> (I<lwin>)
+
+=item I<rightwin> (I<rwin>)
+
+=item I<menu>
+
+=item I<scrolllock> (I<scroll>)
+
+=item I<numlock> (I<num>)
+
+=item I<capslock> (I<caps>)
+
+=back
+
+=head1 AUTHOR
+
+Colin O'Leary <colino@cpan.org>
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library is copyright its authors, and is giftware.  See 
+http://alleg.sf.net for more information.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Allegro> - Base Allegro routines
+
+=back
+
+

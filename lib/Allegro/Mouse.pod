@@ -1,0 +1,183 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro::Mouse - Allegro mouse object
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   $al = Allegro->new() or die;
+
+=head1 DESCRIPTION
+
+The Allegro::Mouse object provides an interface to the Allegro mouse 
+routines.  Allegro v4 only supports one mouse.
+
+=head1 METHODS
+
+=over
+
+=item B<new> - create a new mouse object
+
+Creates a new mouse object.
+
+   $mouse = $al->Mouse();
+
+=item B<shutdown> - shutdown mouse driver
+
+Disables this mouse object.
+
+=item B<poll> - polls mouse driver
+
+Polls the mouse driver.  This is not required to be called explicitly to 
+use B<button> or B<position>.
+
+=item B<button> - returns mouse button information
+
+Returns the status of the mouse button(s).
+
+   $b1 = $mouse->button(0);
+   $b2 = $mouse->button(1);
+
+If given a parameter, will return the status as a true/false value of 
+whether that button is pressed.
+
+   @buttons = $mouse->button;
+
+If no parameter is given, returns an array containing the status of each
+mouse button.
+
+=item B<position> - returns mouse position
+
+Returns mouse position.
+
+   $x = $mouse->position('x');
+   $y = $mouse->position('y');
+   $z = $mouse->position('z');
+
+If supplied a parameter, returns the position of the mouse for that axis.
+
+   @pos = $mouse->position;
+
+If no parameter is given, returns an array containing the position for 
+each axis.
+
+=item B<show> - shows mouse on screen or bitmap
+
+Displays the mouse automatically onto a Display or Bitmap object.
+
+   $mouse->show($disp);
+
+This will continuously update the mouse by drawing it onto the specified 
+bitmap.  This may lead to problems if you are drawing to the bitmap while 
+the mouse pointer is being draw.  See B<freeze> and B<scare> below.
+
+=item B<hide> - hides mouse
+
+Disables automatic mouse display on screen/bitmap.
+
+=item B<scare> - scares mouse
+
+Hides mouse temporarily before a drawing operation if needed.
+
+   $mouse->scare(x => $x, y => $y, width => $w, height => $h);
+
+I<x>, I<y>, I<width>, I<height> are the area that is affected.  Defaults 
+to the entire screen.
+to the entire screen.
+
+=item B<unscare> - unscares mouse
+
+Disables temporary mouse hiding.
+
+=item B<freeze> - freeze mouse pointer
+
+Disables mouse movement.  Use this if you are drawing on the same bitmap 
+on which the mouse is displayed.  This avoids have to hide the mouse, but 
+you must not draw over the mouse pointer.
+
+=item B<unfreeze> - unfreeze mouse pointer
+
+Re-enables mouse movement.
+
+=item B<clip> - set mouse clipping rectangle
+
+Sets a clipping rectangle for mouse movement.  The mouse will not be able
+to move out if this area.
+
+   $mouse->clip(x => $x, y => $y, width => $w, height => $h);
+
+=item B<speed> - set mouse movement speed
+
+Sets the mouse movement speed.
+
+   $mouse->speed(x => 2, y => 2);
+
+=over
+
+=item I<x> (optional) - horizontal speed
+
+=item I<y> (optional) - vertical speed
+
+=back
+
+=item B<set> - set mouse position
+
+Set the mouse's current position.
+
+   $mouse->set(x => 10, y => 10, z => -2);
+
+The I<z> parameter is optional.
+
+=item B<sprite> - set mouse pointer
+
+Changes the pointer used for the mouse.
+
+   $mouse->sprite(bitmap => $bitmap,
+                  x      => 0,
+                  y      => 0);
+
+=over
+
+=item I<bitmap> (optional) - mouse sprite
+
+=item I<x>, I<y> (optional) - point to use as mouse focus
+
+=back
+
+=item B<mickeys> - get mouse mickeys
+
+Returns an array of how far the mouse has moved since the last call to 
+this method.
+
+   ($xm, $ym) = $mouse->mickeys;
+
+=back
+
+=head1 AUTHOR
+
+Colin O'Leary <colino@cpan.org>
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library is copyright its authors, and is giftware.  See 
+http://alleg.sf.net for more information.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Allegro> - Base Allegro routines
+
+=back
+

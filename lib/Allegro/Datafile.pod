@@ -1,0 +1,84 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro::Datafile - Allegro datafile routines
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   $al = Allegro->new() or die;
+   $data = $al->Datafile(file => "example.dat");
+
+   $bmp = $data->object("example1.bmp");
+   $pal = $data->object("example.pal");
+
+=head1 DESCRIPTION
+
+The Allegro::Datafile module provides an object-oriented interface to the 
+Allegro Datafile routines.
+
+=head1 METHODS
+
+=over
+
+=item B<new> - create a new datafile object
+
+Loads a datafile from disk.
+
+   $data = $al->Datafile(file => $filename, password => $pass);
+
+=over
+
+=item I<file> (required)
+
+Name of datafile to load.
+
+=item I<password> (optional)
+
+Password to decrypt datafile.  Defaults to no encryption.
+
+=back
+
+=item B<object> - access a datafile object from a loaded datafile
+
+Allows access to an object from a previously loaded datafile.
+
+   $bmp  = $data->object("test.bmp");
+   $font = $data->object("main.fnt");
+   $samp = $data->object("fire.wav");
+
+=item B<names> - returns list of object names
+
+   for ($data->names) {
+      print;
+   }
+
+=back
+
+=head1 AUTHOR
+
+Colin O'Leary <colino@cpan.org>
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library is copyright its authors, and is giftware.  See 
+http://alleg.sf.net for more information.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Allegro> - Base Allegro routines
+
+=back
+

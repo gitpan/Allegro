@@ -1,0 +1,110 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro::Sample - Allegro digital sound routines
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   $al = Allegro->new() or die;
+   $al->Sound(digi => 'auto') or die $al->error;
+
+   $spl = $al->Sample(file => "test.wav") or die;
+   $spl->play(loop => 1);
+
+   sleep 10;
+
+=head1 DESCRIPTION
+
+The Allegro::Sample module provides an interface to the Allegro sample 
+routines.  An Allegro module should already be initialized for this
+to work.
+
+=head1 METHODS
+
+=over 
+
+=item B<new> - create a new sample
+
+This method loads a new sample from disk.
+
+   $spl = $al->Sample(file => $filename);
+
+   I<file> is the name of the file to load, and is required.
+
+=item B<play> - play sample
+
+Plays sample.
+
+   $spl->play(volume => $vol,
+              pan    => $pan,
+              freq   => $freq,
+              loop   => $loop);
+
+=over
+
+=item I<volume> (optional)
+
+volume at which to play sample (0-255)
+
+=item I<pan> (optional)
+
+left/right panning at which to play sample (0-255).  0 is hard left, 255 
+is hard right.
+
+=item I<freq> (optional)
+
+relative frequency at which to play sample.  1000 is standard, 2000 
+double, 500 half, etc.
+
+=item I<loop> (optional)
+
+sample will loop if this option is set.  use C<< $spl->stop() >> to end 
+it.
+
+=back
+
+=item B<adjust> - adjusts a currently playing sample
+
+Adjusts a currently playing sample.  Takes the same arguments as 
+Allegro::Sample::play().
+
+   $spl->adjust(...);
+
+=item B<stop> - stops a currenlt playing sample
+
+Stops a sample.
+
+   $spl->stop;
+
+=back
+
+=head1 AUTHOR
+
+Colin O'Leary <colino@cpan.org>
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library is copyright its authors, and is giftware.  See 
+http://alleg.sf.net for more information.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Allegro> - Base Allegro routines
+
+=item L<Allegro> - Allegro Sound initilization object
+
+=back
+

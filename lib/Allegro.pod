@@ -1,0 +1,1727 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro - Perl interface to Allegro multimedia library
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   # Create Allegro object
+   $al = Allegro->new() or die "Couldn't initialize Allegro";
+
+   # Create Display object (screen)
+   $disp = $al->Display(width => 640, height => 480)
+      or die "Couldn't set graphics mode " . $al->error;
+
+   for $file (@ARGV)
+   {
+      # Load image into bitmap
+      $bmp = $disp->Bitmap(file => $file)
+         or die "Couldn't load $file";
+
+      # Clear display bitmap
+      $disp->clear();
+
+      # Copy image bitmap to display
+      $disp->blit($bmp);
+
+      $al->sleep(10);
+   }
+
+=head1 DESCRIPTION
+
+=head2 Allegro
+
+Allegro is a game programming library for C/C++ developers distributed 
+freely, supporting the following platforms: DOS, Unix (Linux, FreeBSD, 
+Irix, Solaris, Darwin), Windows, QNX, BeOS and MacOS X new!. It provides 
+many functions for graphics, sounds, player input (keyboard, mouse and 
+joystick) and timers. It also provides fixed and floating point 
+mathematical functions, 3d functions, file management functions, 
+compressed datafile and a GUI.  [from the Allegro website]
+
+=head2 Allegro Perl Module
+
+This module provides an object-oriented Perl interface to Allegro.
+
+The entire Allegro API is not implemented.  The configuration routines, 3d 
+routines, FLIC, RLE and compiled sprites, audio streams, and GUI are not 
+implemented by this module.  They may be in the future.
+
+=head2 Interfaces
+
+This module provides both a Perl-based object oriented interface as well 
+as a thin wrapper around the Allegro C library.  It is suggested that you 
+use the Perl interface, but the C wrapper routrines are available.  See 
+B<PROCEDURAL INTERFACE> below.
+
+=head1 OBJECT ORIENTED INTERFACE
+
+=head2 Allegro Objects
+
+The Allegro Perl module is a collection of packages corresponding to 
+various objects.  These objects map loosely to the Allegro API.  Objects 
+include things such as Bitmaps, Timers, Datafiles, the Keyboard, Mouse, 
+etc.
+
+There is a general hierarchy of objects used.  Some objects may be able to 
+create sub-objects that are associated with them.  The hierarchy is rooted 
+by the B<Allegro> module which can create various sub-objects.
+
+To create a sub-object, the following syntax is used:
+
+   $al   = Allegro->new;
+   $disp = $al->Display(mode => 'window');
+
+The C<Display> here is the name of a class provided by the Allegro module.  
+B<Display> is a sub-object of the global Allegro object.  B<Display> can 
+create one sub-object: the B<Bitmap> object.
+
+   $bmp  = $disp->Bitmap(width => 640, height => 480);
+
+C<Bitmap> here is a sub-object of C<$disp>.  Bitmap objects may be 
+sub-objects of either B<Allegro> or B<Display>, but B<Display> is 
+preferred.  See B<Allegro::Display> below.
+
+The following is a list of all Allegro objects.
+
+=head2 Object Summary
+
+=over
+
+=item B<Allegro>
+
+B<Allegro> is the base Allegro object.  Only one Allegro instance may be 
+created at a time.  If B<Allegro::new> is called more than once, the 
+previously created instance will be retured.
+
+B<Allegro> does not have a parent object.  Therefore it must be created by 
+a call to C<< Allegro->new() >> instead of the form used for other Allegro 
+objects.
+
+=item B<Allegro::Bitmap>
+
+B<Allegro::Bitmap> is a bitmap object, corresponding to Allegro's 
+C<BITMAP> structure.  A B<Bitmap> may be created with either an Allegro or 
+Display object call to C<< ->Bitmap >>, but B<Display> is preferred.
+
+=item B<Allegro::Datafile>
+
+Allegro datafiles may be read into a B<Allegro::Datafile> object.  This 
+will create a collection of Allegro objects for each included file.
+
+=item B<Allegro::Display>
+
+An B<Allegro::Display> object corresponds the the C<screen> bitmap pointer 
+in Allegro.  Creating a B<Display> object will either create a new window 
+on the desktop or enter full screen mode.  B<Bitmap> objects may be 
+created from the returned B<Display> instance.
+
+=item B<Allegro::Font>
+
+B<Allegro::Font> is a font that may be used for text drawing.  This 
+corresponds to Allegro's C<FONT> type.  Allegro does not provide any 
+routines for loading fonts directly, but they may be loaded via a 
+B<Datafile> object.
+
+=item B<Allegro::Joystick>
+
+B<Allegro::Joystick> corresponds to a single joystick installed on the 
+system.  Each returned instance contains methods to read joystick buttons 
+and axes, as well as calibration methods.
+
+=item B<Allegro::Keyboard>
+
+B<Allegro::Keyboard> accesses the keyboard, providing methods to check for 
+key presses and do buffered keyboard reading.  Only one B<Keyboard> object 
+may exist at once.
+
+=item B<Allegro::MIDI>
+
+MIDI objects are not yet implemented.
+
+=item B<Allegro::Mouse>
+
+B<Allegro::Mouse> provides an object to access the current mouse position 
+and button status.  Only one mouse object may be created.
+
+=item B<Allegro::Palette>
+
+The B<Allegro::Palette> object provides methods to read and write color 
+palettes that may be used with Allegro's 8-bit indexed color modes.  Each 
+8-bit B<Bitmap> object will include a B<Palette> object.
+
+=item B<Allegro::Sound>
+
+The B<Allegro::Sound> is used to initialize the sound card drivers and set 
+the global volume.
+
+=item B<Allegro::Sample>
+
+B<Allegro::Sample> is a digital sample object.  This corresponds to 
+Allegro's C<SAMPLE> abstract type, and provides methods to play digital 
+sounds.
+
+=item B<Allegro::Timer>
+
+B<Allegro::Timer> objects provide access to Allegro's timer callbacks.  
+Each object corresponds to one timer callback.
+
+=back
+
+The B<Allegro> object is described below.  Other objects are fully 
+documented in their respective manual pages.
+
+=head2 Allegro Object
+
+=head3 Description
+
+The B<Allegro> object is the ancestor of all objects created by the 
+Allegro module.  It can only be created once, and then further calls to B<new> 
+will result in the original object being returned.
+
+Creating an B<Allegro> object will initialize the Allegro library.  This 
+may involve accessing the hardware.  For instance, this will check the 
+C<DISPLAY> environment variable and connect to X under Unix, try to access 
+a spare virtual terminal under Linux, or create a (non-yet visible) window 
+in Microsoft Windows.  Use I<driver> => C<none> in B<new> to avoid this.
+
+=head3 Methods
+
+=over
+
+=item B<new> - create a new Allegro instance
+
+This method creates a new Allegro instance, which can then be used to 
+create sub-objects, as well as initialize various other Allegro 
+subsystems.
+
+   $al = Allegro->new(driver => 'auto');
+
+I<driver> is the driver to use for the Allegro system driver.  Currently 
+only C<auto> and C<none> are valid options.  C<auto> will pick whatever is 
+convenient or use allegro.cfg, which C<none> will use the special 
+C<SYSTEM_NONE()> driver from Allegro.  This driver will not allow any 
+hardware access.  It is only useful for reading and writing memory bitmaps 
+and datafiles.  The default is C<auto>.
+
+=item B<shutdown> - shuts down the Allegro system
+
+This method releasing all access to the hardware and frees any memory 
+Allegro is using internally.  Any Allegro objects that are still in 
+existance are considered invalid after this call, and may not be used 
+safely.
+
+This will be called automatically when Perl exits;  it does not need to be 
+called explicitly.
+
+=item B<sleep>
+
+   $al->sleep($seconds);
+
+Sleeps for a number of seconds.  I<$seconds> may be a floating point 
+number.  This should be used in place of Perl's builtin sleep function, 
+since Allegro's timer system and the Timer module may cause the builtin
+to work improperly.
+
+This may be exported and used as a replacement for the builtin sleep.
+
+=item B<error> - return last Allegro error message
+
+This method will return a text error message relating to the last failure
+by Allegro, most notably failure to set a graphics mode.
+
+=item B<message> - switch to text mode and print message
+
+This method provides a portable way to send an error message to the user.  
+It will destroy the current display (by switching to a "text" mode).
+
+=back
+
+=head1 PROCEDURAL INTERFACE
+
+=head2 Description
+
+In addition the the object oriented interface described above, the thinly 
+wrapped C routines used by the object-oriented interface are available.  
+Knowledge of the Allegro API is assumed in the reference below.  Most 
+functions behave exactly as their C counterparts.
+
+The entire Allegro API has not been included.  Since it is troublesome to 
+access C structs and global variables directly in Perl, a number of 
+get/set functions were added.
+
+All of Allegro's (semi) opague data types have been turned into blessed 
+objects via a C<T_PTROBJ> typemap.  This means that functions which return 
+a pointer to some Allegro type will return a blessed hash reference.  For 
+example, B<al_load_bitmap> will return an object of the type 
+C<BITMAPPtr>, which can then be passed to B<al_save_bitmap> or B<blit>.  
+To get a NULL pointer, you will need to use the provided 
+B<AL_NULL_BITMAP>() and B<AL_NULL_PALETTE>() constants.
+
+Any functions taking or returning Allegro's C<fixed> type will instead
+take and return regular Perl floating values.  These will be converted
+back and forth to C<fixed> automatically.  Take care not to pass a number
+out of the fixed point range to these functions.
+
+All of the Allegro functions are in the B<Allegro> package.  They are not 
+exported by default.  They can be exported with a C<:functions> tag.  The 
+defines are prefixed with C<AL_>, and are also in B<Allegro>.  These can be
+exported with C<:defines>.
+
+=head2 Example
+
+This example loads a bitmap and displays it on the screen.  Error checking 
+has been omitted.
+
+   use Allegro qw(:functions :defines);
+
+   al_allegro_init();
+   al_install_keyboard();
+   al_set_color_depth(24);
+   al_set_gfx_mode(AL_GFX_AUTODETECT(), 640, 480, 0, 0);
+
+   $screen = al_get_screen();
+   $b = al_load_bitmap("test.bmp", AL_NULL_PALETTE());
+
+   blit($b, $screen, 0, 0, 0, 0, al_get_bitmap_width($b),
+      al_get_bitmap_height($b));
+
+   al_readkey();
+
+=head2 Allegro API
+
+Below is a list of all available Allegro functions.  Unless noted 
+these will simply call the low level C library function without any 
+modification or verification.  Therefore you need to be more careful than 
+with the OO interface, as it is easy to crash Perl with a bad call to 
+Allegro.
+
+=head3 Allegro Functions
+
+The following functions behave exactly as their C counterparts.  See the 
+Allegro documentation for details.
+
+=begin comment
+
+The following list is generated by misc/gen-allegro-pod from "auto.xsh".  
+Do not edit it here or remove the BEGIN_ and END_ tags.
+
+=end comment
+
+=for comment BEGIN_AUTO_FUNC
+
+=over
+
+=item void B<al_acquire_bitmap>(I<bmp>)
+
+=item void B<al_adjust_sample>(I<spl>, I<vol>, I<pan>, I<freq>, I<loop>)
+
+=item void B<al_allegro_exit>()
+
+=item int B<al_allocate_voice>(I<spl>)
+
+=item void B<al_arc>(I<bmp>, I<x>, I<y>, I<ang1>, I<ang2>, I<r>, I<color>)
+
+=item int B<al_bitmap_color_depth>(I<bmp>)
+
+=item int B<al_bitmap_mask_color>(I<bmp>)
+
+=item void B<al_blit>(I<source>, I<dest>, I<source_x>, I<source_y>, I<dest_x>, I<dest_y>, I<width>, I<height>)
+
+=item int B<al_calibrate_joystick>(I<n>)
+
+=item const char * B<al_calibrate_joystick_name>(I<n>)
+
+=item void B<al_clear_bitmap>(I<bitmap>)
+
+=item void B<al_clear_keybuf>()
+
+=item void B<al_clear_to_color>(I<bitmap>, I<color>)
+
+=item BITMAP * B<al_create_bitmap>(I<width>, I<height>)
+
+=item BITMAP * B<al_create_bitmap_ex>(I<color_depth>, I<width>, I<height>)
+
+=item SAMPLE * B<al_create_sample>(I<bits>, I<stereo>, I<freq>, I<len>)
+
+=item BITMAP * B<al_create_sub_bitmap>(I<parent>, I<x>, I<y>, I<width>, I<height>)
+
+=item BITMAP * B<al_create_system_bitmap>(I<width>, I<height>)
+
+=item BITMAP * B<al_create_video_bitmap>(I<width>, I<height>)
+
+=item void B<al_deallocate_voice>(I<voice>)
+
+=item int B<al_desktop_color_depth>()
+
+=item void B<al_destroy_bitmap>(I<bitmap>)
+
+=item void B<al_destroy_font>(I<f>)
+
+=item void B<al_destroy_midi>(I<midi>)
+
+=item void B<al_destroy_rle_sprite>(I<sprite>)
+
+=item void B<al_destroy_sample>(I<spl>)
+
+=item void B<al_draw_gouraud_sprite>(I<bmp>, I<sprite>, I<x>, I<y>, I<c1>, I<c2>, I<c3>, I<c4>)
+
+=item void B<al_draw_lit_rle_sprite>(I<bmp>, I<sprite>, I<x>, I<y>, I<color>)
+
+=item void B<al_draw_lit_sprite>(I<bmp>, I<sprite>, I<x>, I<y>, I<color>)
+
+=item void B<al_draw_rle_sprite>(I<bmp>, I<sprite>, I<x>, I<y>)
+
+=item void B<al_draw_sprite>(I<bmp>, I<sprite>, I<x>, I<y>)
+
+=item void B<al_draw_sprite_h_flip>(I<bmp>, I<sprite>, I<x>, I<y>)
+
+=item void B<al_draw_sprite_v_flip>(I<bmp>, I<sprite>, I<x>, I<y>)
+
+=item void B<al_draw_sprite_vh_flip>(I<bmp>, I<sprite>, I<x>, I<y>)
+
+=item void B<al_draw_trans_rle_sprite>(I<bmp>, I<sprite>, I<x>, I<y>)
+
+=item void B<al_draw_trans_sprite>(I<bmp>, I<sprite>, I<x>, I<y>)
+
+=item void B<al_drawing_mode>(I<mode>, I<pattern>, I<x_anchor>, I<y_anchor>)
+
+=item void B<al_ellipse>(I<bmp>, I<x>, I<y>, I<rx>, I<ry>, I<color>)
+
+=item void B<al_ellipsefill>(I<bmp>, I<x>, I<y>, I<rx>, I<ry>, I<color>)
+
+=item void B<al_fixup_datafile>(I<data>)
+
+=item void B<al_floodfill>(I<bmp>, I<x>, I<y>, I<color>)
+
+=item int B<al_get_display_switch_mode>()
+
+=item void B<al_get_palette>(I<p>)
+
+=item int B<al_get_refresh_rate>()
+
+=item RLE_SPRITE * B<al_get_rle_sprite>(I<bitmap>)
+
+=item int B<al_get_sound_input_cap_bits>()
+
+=item int B<al_get_sound_input_cap_parm>(I<rate>, I<bits>, I<stereo>)
+
+=item int B<al_get_sound_input_cap_rate>(I<bits>, I<stereo>)
+
+=item int B<al_get_sound_input_cap_stereo>()
+
+=item int B<al_geta>(I<c>)
+
+=item int B<al_geta_depth>(I<color_depth>, I<c>)
+
+=item int B<al_getb>(I<c>)
+
+=item int B<al_getb_depth>(I<color_depth>, I<c>)
+
+=item int B<al_getg>(I<c>)
+
+=item int B<al_getg_depth>(I<color_depth>, I<c>)
+
+=item int B<al_getpixel>(I<bmp>, I<x>, I<y>)
+
+=item int B<al_getr>(I<c>)
+
+=item int B<al_getr_depth>(I<color_depth>, I<c>)
+
+=item void B<al_hline>(I<bmp>, I<x1>, I<y>, I<x2>, I<color>)
+
+=item int B<al_install_joystick>(I<type>)
+
+=item int B<al_install_keyboard>()
+
+=item int B<al_install_mouse>()
+
+=item int B<al_install_sound>(I<digi>, I<midi>, I<cfg_path>)
+
+=item int B<al_install_sound_input>(I<digi>, I<midi>)
+
+=item int B<al_install_timer>()
+
+=item int B<al_is_memory_bitmap>(I<bmp>)
+
+=item int B<al_is_same_bitmap>(I<bmp1>, I<bmp2>)
+
+=item int B<al_is_screen_bitmap>(I<bmp>)
+
+=item int B<al_is_sub_bitmap>(I<bmp>)
+
+=item int B<al_is_system_bitmap>(I<bmp>)
+
+=item int B<al_is_video_bitmap>(I<bmp>)
+
+=item int B<al_keypressed>()
+
+=item void B<al_line>(I<bmp>, I<x1>, I<y1>, I<x2>, I<y2>, I<color>)
+
+=item BITMAP * B<al_load_bitmap>(I<filename>, I<pal>)
+
+=item DATAFILE * B<al_load_datafile>(I<filename>)
+
+=item DATAFILE * B<al_load_datafile_object>(I<filename>, I<objectname>)
+
+=item MIDI * B<al_load_midi>(I<filename>)
+
+=item SAMPLE * B<al_load_sample>(I<filename>)
+
+=item int B<al_makeacol>(I<r>, I<g>, I<b>, I<a>)
+
+=item int B<al_makeacol_depth>(I<color_depth>, I<r>, I<g>, I<b>, I<a>)
+
+=item int B<al_makecol>(I<r>, I<g>, I<b>)
+
+=item int B<al_makecol_depth>(I<color_depth>, I<r>, I<g>, I<b>)
+
+=item void B<al_masked_blit>(I<source>, I<dest>, I<source_x>, I<source_y>, I<dest_x>, I<dest_y>, I<width>, I<height>)
+
+=item void B<al_masked_stretch_blit>(I<s>, I<d>, I<s_x>, I<s_y>, I<s_w>, I<s_h>, I<d_x>, I<d_y>, I<d_w>, I<d_h>)
+
+=item void B<al_midi_pause>()
+
+=item void B<al_midi_resume>()
+
+=item int B<al_midi_seek>(I<target>)
+
+=item int B<al_mouse_needs_poll>()
+
+=item void B<al_packfile_password>(I<password>)
+
+=item void B<al_pivot_scaled_sprite>(I<bmp>, I<sprite>, I<x>, I<y>, I<cx>, I<cy>, I<angle>, I<scale>)
+
+=item void B<al_pivot_scaled_sprite_v_flip>(I<bmp>, I<sprite>, I<x>, I<y>, I<cx>, I<cy>, I<angle>, I<scale>)
+
+=item void B<al_pivot_sprite>(I<bmp>, I<sprite>, I<x>, I<y>, I<cx>, I<cy>, I<angle>)
+
+=item void B<al_pivot_sprite_v_flip>(I<bmp>, I<sprite>, I<x>, I<y>, I<cx>, I<cy>, I<angle>)
+
+=item int B<al_play_looped_midi>(I<midi>, I<loop_start>, I<loop_end>)
+
+=item int B<al_play_midi>(I<midi>, I<loop>)
+
+=item int B<al_play_sample>(I<spl>, I<vol>, I<pan>, I<freq>, I<loop>)
+
+=item int B<al_poll_joystick>()
+
+=item int B<al_poll_keyboard>()
+
+=item int B<al_poll_mouse>()
+
+=item void B<al_position_mouse>(I<x>, I<y>)
+
+=item void B<al_position_mouse_z>(I<z>)
+
+=item void B<al_putpixel>(I<bmp>, I<x>, I<y>, I<color>)
+
+=item int B<al_read_sound_input>(I<buffer>)
+
+=item void B<al_reallocate_voice>(I<voice>, I<spl>)
+
+=item void B<al_rect>(I<bmp>, I<x1>, I<y1>, I<x2>, I<y2>, I<color>)
+
+=item void B<al_rectfill>(I<bmp>, I<x1>, I<y1>, I<x2>, I<y2>, I<color>)
+
+=item void B<al_release_bitmap>(I<bmp>)
+
+=item void B<al_release_voice>(I<voice>)
+
+=item void B<al_remove_keyboard>()
+
+=item void B<al_remove_mouse>()
+
+=item void B<al_remove_sound>()
+
+=item void B<al_remove_sound_input>()
+
+=item void B<al_remove_timer>()
+
+=item void B<al_request_refresh_rate>(I<rate>)
+
+=item void B<al_reserve_voices>(I<digi_voices>, I<midi_voices>)
+
+=item void B<al_rest>(I<time>)
+
+=item void B<al_rotate_scaled_sprite>(I<bmp>, I<sprite>, I<x>, I<y>, I<angle>, I<scale>)
+
+=item void B<al_rotate_scaled_sprite_v_flip>(I<bmp>, I<sprite>, I<x>, I<y>, I<angle>, I<scale>)
+
+=item void B<al_rotate_sprite>(I<bmp>, I<sprite>, I<x>, I<y>, I<angle>)
+
+=item void B<al_rotate_sprite_v_flip>(I<bmp>, I<sprite>, I<x>, I<y>, I<angle>)
+
+=item int B<al_save_bitmap>(I<filename>, I<bmp>, I<pal>)
+
+=item void B<al_scare_mouse>()
+
+=item void B<al_scare_mouse_area>(I<x>, I<y>, I<w>, I<h>)
+
+=item int B<al_scroll_screen>(I<x>, I<y>)
+
+=item void B<al_select_palette>(I<p>)
+
+=item void B<al_set_alpha_blender>()
+
+=item void B<al_set_clip>(I<bitmap>, I<x1>, I<y1>, I<x2>, I<y2>)
+
+=item void B<al_set_color_conversion>(I<mode>)
+
+=item void B<al_set_color_depth>(I<depth>)
+
+=item int B<al_set_display_switch_mode>(I<mode>)
+
+=item int B<al_set_gfx_mode>(I<card>, I<w>, I<h>, I<v_w>, I<v_h>)
+
+=item void B<al_set_keyboard_rate>(I<delay>, I<repeat>)
+
+=item void B<al_set_leds>(I<leds>)
+
+=item void B<al_set_mouse_range>(I<x1>, I<y1>, I<x2>, I<y2>)
+
+=item void B<al_set_mouse_speed>(I<xspeed>, I<yspeed>)
+
+=item void B<al_set_mouse_sprite>(I<sprite>)
+
+=item void B<al_set_mouse_sprite_focus>(I<x>, I<y>)
+
+=item void B<al_set_palette>(I<p>)
+
+=item int B<al_set_sound_input_source>(I<source>)
+
+=item void B<al_set_trans_blender>(I<r>, I<g>, I<b>, I<a>)
+
+=item void B<al_set_volume>(I<digi_volume>, I<midi_volume>)
+
+=item void B<al_set_volume_per_voice>(I<scale>)
+
+=item void B<al_set_window_title>(I<name>)
+
+=item void B<al_show_mouse>(I<bmp>)
+
+=item int B<al_show_video_bitmap>(I<bitmap>)
+
+=item int B<al_start_sound_input>(I<rate>, I<bits>, I<stereo>)
+
+=item void B<al_stop_midi>()
+
+=item void B<al_stop_sample>(I<spl>)
+
+=item void B<al_stop_sound_input>()
+
+=item void B<al_stretch_blit>(I<s>, I<d>, I<s_x>, I<s_y>, I<s_w>, I<s_h>, I<d_x>, I<d_y>, I<d_w>, I<d_h>)
+
+=item int B<al_text_height>(I<f>)
+
+=item int B<al_text_length>(I<f>, I<str>)
+
+=item int B<al_text_mode>(I<mode>)
+
+=item void B<al_textout>(I<bmp>, I<f>, I<str>, I<x>, I<y>, I<color>)
+
+=item void B<al_textout_centre>(I<bmp>, I<f>, I<str>, I<x>, I<y>, I<color>)
+
+=item void B<al_textout_justify>(I<bmp>, I<f>, I<str>, I<x1>, I<x2>, I<y>, I<diff>, I<color>)
+
+=item void B<al_textout_right>(I<bmp>, I<f>, I<str>, I<x>, I<y>, I<color>)
+
+=item void B<al_triangle>(I<bmp>, I<x1>, I<y1>, I<x2>, I<y2>, I<x3>, I<y3>, I<color>)
+
+=item void B<al_unload_datafile>(I<dat>)
+
+=item void B<al_unload_datafile_object>(I<dat>)
+
+=item void B<al_unscare_mouse>()
+
+=item void B<al_unselect_palette>()
+
+=item void B<al_vline>(I<bmp>, I<x>, I<y1>, I<y2>, I<color>)
+
+=item SAMPLE * B<al_voice_check>(I<voice>)
+
+=item int B<al_voice_get_frequency>(I<voice>)
+
+=item int B<al_voice_get_pan>(I<voice>)
+
+=item int B<al_voice_get_position>(I<voice>)
+
+=item int B<al_voice_get_volume>(I<voice>)
+
+=item void B<al_voice_set_frequency>(I<voice>, I<frequency>)
+
+=item void B<al_voice_set_playmode>(I<voice>, I<playmode>)
+
+=item void B<al_voice_set_position>(I<voice>, I<position>)
+
+=item void B<al_voice_set_priority>(I<voice>, I<priority>)
+
+=item void B<al_voice_set_volume>(I<voice>, I<volume>)
+
+=item void B<al_voice_start>(I<voice>)
+
+=item void B<al_voice_stop>(I<voice>)
+
+=item void B<al_vsync>()
+
+=back
+
+=for comment END_AUTO_FUNC
+
+=head3 Modified/Additional Functions
+
+The following functions have been added to help access various Allegro 
+global variables or provide a Perl-friendly interface to Allegro 
+functions.
+
+=begin comment
+
+The following list is generated by misc/gen-allegro-pod from "Allegro.xs".
+Do not edit it here or remove the BEGIN_ and END_ tags.
+
+=end comment
+
+=for comment BEGIN_XS_FUNC
+
+=over
+
+=item int B<al_install_allegro>(I<system>)
+
+This is similar to the real install_allegro, with the default values
+for the errno and atexit pointers.
+
+=item int B<al_allegro_init>()
+
+Identical to allegro_init.
+
+=item char * B<al_get_error>()
+
+Returns allegro_error[].
+
+=item char * B<al_get_version>()
+
+Returns a text string (ALLEGRO_VERSION_STR).
+
+=item FONT * B<al_get_system_font>()
+
+Returns the font pointer.
+
+=item BITMAP * B<al_get_screen>()
+
+Returns the screen pointer.
+
+=item void B<al_get_screen_size>()
+
+Returns the screen width, height, virtual width, virtual height.
+
+   ($w, $h, $vw, $vh) = al_get_screen_size();
+
+=item int B<al_get_gfx_capabilities>()
+
+Returns gfx_capabilites.
+
+=item void B<al_allegro_message>(I<text>)
+
+Identical to allegro_message.
+
+=item void B<al_get_bitmap_size>(I<bmp>)
+
+Returns bitmap width and height.
+
+   ($w, $h) = al_get_bitmap_size($bmp);
+
+=item void B<al_get_bitmap_clip>(I<bmp>)
+
+Returns bmp->clip, bmp->cl, bmp->cr, bmp->ct, bmp->cb.
+
+   ($enable, $l, $r, $t, $b) = al_get_bitmap_clip($bmp);
+
+=item void B<al_get_rle_size>(I<rle>)
+
+Returns RLE sprite width and height.
+
+   ($w, $h) = al_get_rle_size($rle);
+
+=item int B<al_get_rle_depth>(I<rle>)
+
+Returns the color depth of an RLE sprite.
+
+=item void B<al_polygon>(I<bmp>, I<color>, ...)
+
+Takes points as al_polygon(bmp, color, x1, y1, x2, y2, x3, y3, x4, y4, 
+...) and calls polygon.
+
+=item void B<al_get_mouse_info>()
+
+Returns mouse_x, mouse_y, mouse_z, mouse_b.
+
+   ($x, $y, $z, $b) = al_get_mouse_info();
+
+=item void B<al_readkey>()
+
+Returns the ascii and scancode values from ureadkey.
+
+   ($ascii, $scan) = al_readkey();
+
+=item void B<al_simulate_keypress>(I<scancode>)
+
+Calls simulate_ukeypress.
+
+=item int B<al_get_key>(I<k>)
+
+Returns a value from the key[] array.
+
+=item int B<al_get_key_shifts>()
+
+Returns key_shifts.
+
+=item int B<al_get_datafile_size>(I<dat>)
+
+Returns the number of objects in a datafile.
+
+=item int B<al_get_datafile_type>(I<dat>, I<i>)
+
+Returns the datafile type.
+
+I<dat> may be either a pointer to a datafile object or a pointer to an
+array of datafile objects.
+
+I<i> is the index into the array, or C<-1> if I<dat> is a datafile
+pointer.
+
+=item void * B<al_get_datafile_data>(I<dat>, I<i>)
+
+Returns the data pointer.  I<dat> and I<i> are as in 
+B<al_get_datafile_type>.
+
+=item const char * B<al_get_datafile_property>(I<dat>, I<i>, I<str>)
+
+Returns the specified datafile property.
+
+I<dat> and I<i> are as above.
+I<str> is a string specifying the property.  See the Allegro 
+documentation for valid datafile properties.
+
+=item int B<al_get_num_joysticks>()
+
+Returns num_joysticks.
+
+=item void B<al_get_joystick_info>(I<i>)
+
+Returns joy[I<i>].flags, joy[I<i>].num_sticks, joy[I<i>].num_buttons,
+or undef if I<i> is out of range.
+
+   ($flags, $sticks, $buttons) = al_get_joystick_info($i);
+
+=item void B<al_get_joystick_button_info>(I<i>, I<b>)
+
+Returns joy[I<i>].button[I<b>].b and joy[I<i>].button[I<b>].name, or
+undef if I<i> or I<b> are out of range.
+
+   ($status, $name) = al_get_joystick_button($i, $b);
+
+=item void B<al_get_joystick_stick_info>(I<i>, I<s>)
+
+Returns joy[I<i>].stick[I<s>].flags, joy[I<i>].stick[I<s>].num_axis, 
+and joy[I<i>].stick[I<s>].name, or undef if I<i> or I<s> are out of
+of range.
+
+   ($flags, $axes, $name) = al_get_joystick_info($i, $s);
+
+=item void B<al_get_joystick_axis_info>(I<i>, I<s>, I<a>)
+
+Returns analog position, digital position, and name of specified axis.
+
+Analog is joy[I<i>].stick[I<s>].axis[I<a>].pos.  Digital is C<-1> for 
+left/up, C<1> for right/down, or C<0> for centered (based on 
+joy[I<i>].stick[I<s>].axis[I<a>].d1 and d2).  Name is
+joy[I<i>].stick[I<s>].axis[I<a>].name.
+
+   ($a, $d, $name) = al_get_joystick_info($i, $s, $a);
+
+=item void B<al_set_freeze_mouse>(I<status>)
+
+Sets freeze_mouse_flag to I<status>.
+
+=item void B<al_get_midi_info>()
+
+Returns midi_pos, midi_loop_start, midi_loop_end.
+
+   ($pos, $start, $end) = al_get_midi_info();
+
+=item RGB * B<al_create_palette>()
+
+Mallocs a new palette and returns it.
+
+=item void B<al_destroy_palette>(I<pal>)
+
+Frees a previously allocated palette.
+
+=item void B<al_set_palette_color>(I<pal>, I<i>, I<r>, I<g>, I<b>)
+
+Sets I<pal>'s index I<i> to the specified color.  Colors are 0-255 
+instead of Allegro's 0-63.
+
+=item void B<al_get_palette_color>(I<pal>, I<i>)
+
+Returns I<pal>'s red, green, blue values for index I<i>.  Colors are
+0-255 instead of Allegro's 0-63.
+
+   ($r, $g, $b) = al_get_palette_color($pal, $i);
+
+=item int B<al_create_timer>()
+
+Timers: the timer functions below use Allegro's timer system, but will
+not automatically call a Perl subroutine when fired.
+
+They must be checked via B<al_get_timer_updates>.  See 
+F<lib/Allegro/Timer.pm> for an example.
+
+Initializes a new timer.  Returns an id to be used by the other timer
+routines below.
+
+=item int B<al_start_timer>(I<id>, I<speed>)
+
+Starts a previously initialized timer.
+
+I<id> is the timer id and I<inteval> is the time between timer updates.
+Returns true on success, false on failure.
+
+=item int B<al_stop_timer>(I<id>)
+
+Stops a timer.
+
+I<id> is the timer id.
+
+=item int B<al_get_timer_updates>(I<id>)
+
+Gets the number of times the timer code needs to be run.
+
+I<id> is the timer id.
+
+=item int B<al_decrement_timer>(I<id>)
+
+Decrements the update count.  This should be called after each run of
+the timer code.
+
+I<id> is the timer id.
+
+=item int B<al_id>(I<id>)
+
+Returns an AL_ID from the specified (four-letter) string.
+
+=item void B<al_destroy_color_map>(I<colormap>)
+
+Destroys a previously created COLOR_MAP.
+
+=item void B<al_set_color_map>(I<colormap>)
+
+Sets color_map.
+
+=item COLOR_MAP * B<al_get_color_map>()
+
+Retrieves color_map.
+
+=item COLOR_MAP * B<al_create_color_map>(I<pal>)
+
+Allocates and returns a COLOR_MAP created by create_blender_table() 
+based on the current truecolor blender mode that is set.
+
+=back
+
+=for comment END_XS_FUNC
+
+=head3 Allegro Defines
+
+The following are directly from the Allegro header files.
+
+=begin comment
+
+The following list is generated by misc/gen-allegro-pod from "auto.xsh".  
+Do not edit it here or remove the BEGIN_ and END_ tags.
+
+=end comment
+
+=for comment BEGIN_AUTO_DEFINE
+
+=over
+
+=item int B<AL_COLORCONV_15_TO_16>()
+
+=item int B<AL_COLORCONV_15_TO_24>()
+
+=item int B<AL_COLORCONV_15_TO_32>()
+
+=item int B<AL_COLORCONV_15_TO_8>()
+
+=item int B<AL_COLORCONV_16_TO_15>()
+
+=item int B<AL_COLORCONV_16_TO_24>()
+
+=item int B<AL_COLORCONV_16_TO_32>()
+
+=item int B<AL_COLORCONV_16_TO_8>()
+
+=item int B<AL_COLORCONV_24_TO_15>()
+
+=item int B<AL_COLORCONV_24_TO_16>()
+
+=item int B<AL_COLORCONV_24_TO_32>()
+
+=item int B<AL_COLORCONV_24_TO_8>()
+
+=item int B<AL_COLORCONV_32A_TO_15>()
+
+=item int B<AL_COLORCONV_32A_TO_16>()
+
+=item int B<AL_COLORCONV_32A_TO_24>()
+
+=item int B<AL_COLORCONV_32A_TO_8>()
+
+=item int B<AL_COLORCONV_32_TO_15>()
+
+=item int B<AL_COLORCONV_32_TO_16>()
+
+=item int B<AL_COLORCONV_32_TO_24>()
+
+=item int B<AL_COLORCONV_32_TO_8>()
+
+=item int B<AL_COLORCONV_8_TO_15>()
+
+=item int B<AL_COLORCONV_8_TO_16>()
+
+=item int B<AL_COLORCONV_8_TO_24>()
+
+=item int B<AL_COLORCONV_8_TO_32>()
+
+=item int B<AL_COLORCONV_DITHER_HI>()
+
+=item int B<AL_COLORCONV_DITHER_PAL>()
+
+=item int B<AL_COLORCONV_EXPAND_15_TO_16>()
+
+=item int B<AL_COLORCONV_KEEP_TRANS>()
+
+=item int B<AL_COLORCONV_NONE>()
+
+=item int B<AL_COLORCONV_REDUCE_16_TO_15>()
+
+=item int B<AL_DAT_BITMAP>()
+
+=item int B<AL_DAT_C_SPRITE>()
+
+=item int B<AL_DAT_DATA>()
+
+=item int B<AL_DAT_END>()
+
+=item int B<AL_DAT_FILE>()
+
+=item int B<AL_DAT_FLI>()
+
+=item int B<AL_DAT_FONT>()
+
+=item int B<AL_DAT_MAGIC>()
+
+=item int B<AL_DAT_MIDI>()
+
+=item int B<AL_DAT_NAME>()
+
+=item int B<AL_DAT_PALETTE>()
+
+=item int B<AL_DAT_PALLETE>()
+
+=item int B<AL_DAT_PATCH>()
+
+=item int B<AL_DAT_PROPERTY>()
+
+=item int B<AL_DAT_RLE_SPRITE>()
+
+=item int B<AL_DAT_SAMPLE>()
+
+=item int B<AL_DAT_XC_SPRITE>()
+
+=item int B<AL_DIGI_ALSA>()
+
+=item int B<AL_DIGI_ARTS>()
+
+=item int B<AL_DIGI_AUDIODRIVE>()
+
+=item int B<AL_DIGI_AUTODETECT>()
+
+=item int B<AL_DIGI_BEOS>()
+
+=item int B<AL_DIGI_ESD>()
+
+=item int B<AL_DIGI_MACOS>()
+
+=item int B<AL_DIGI_NONE>()
+
+=item int B<AL_DIGI_OSS>()
+
+=item int B<AL_DIGI_SB10>()
+
+=item int B<AL_DIGI_SB15>()
+
+=item int B<AL_DIGI_SB16>()
+
+=item int B<AL_DIGI_SB20>()
+
+=item int B<AL_DIGI_SBPRO>()
+
+=item int B<AL_DIGI_SOUNDSCAPE>()
+
+=item int B<AL_DIGI_VOICES>()
+
+=item int B<AL_DIGI_WINSOUNDSYS>()
+
+=item int B<AL_DRAW_MODE_COPY_PATTERN>()
+
+=item int B<AL_DRAW_MODE_MASKED_PATTERN>()
+
+=item int B<AL_DRAW_MODE_SOLID>()
+
+=item int B<AL_DRAW_MODE_SOLID_PATTERN>()
+
+=item int B<AL_DRAW_MODE_TRANS>()
+
+=item int B<AL_DRAW_MODE_XOR>()
+
+=item int B<AL_GFX_AUTODETECT>()
+
+=item int B<AL_GFX_AUTODETECT_FULLSCREEN>()
+
+=item int B<AL_GFX_AUTODETECT_WINDOWED>()
+
+=item int B<AL_GFX_BEOS>()
+
+=item int B<AL_GFX_BEOS_FULLSCREEN>()
+
+=item int B<AL_GFX_BEOS_FULLSCREEN_SAFE>()
+
+=item int B<AL_GFX_BEOS_WINDOWED>()
+
+=item int B<AL_GFX_BEOS_WINDOWED_SAFE>()
+
+=item int B<AL_GFX_CAN_SCROLL>()
+
+=item int B<AL_GFX_CAN_TRIPLE_BUFFER>()
+
+=item int B<AL_GFX_DIRECTX>()
+
+=item int B<AL_GFX_DIRECTX_ACCEL>()
+
+=item int B<AL_GFX_DIRECTX_OVL>()
+
+=item int B<AL_GFX_DIRECTX_SAFE>()
+
+=item int B<AL_GFX_DIRECTX_SOFT>()
+
+=item int B<AL_GFX_DIRECTX_WIN>()
+
+=item int B<AL_GFX_DRAWSPROCKET>()
+
+=item int B<AL_GFX_GDI>()
+
+=item int B<AL_GFX_HW_CURSOR>()
+
+=item int B<AL_GFX_HW_FILL>()
+
+=item int B<AL_GFX_HW_FILL_COPY_PATTERN>()
+
+=item int B<AL_GFX_HW_FILL_SOLID_PATTERN>()
+
+=item int B<AL_GFX_HW_FILL_XOR>()
+
+=item int B<AL_GFX_HW_GLYPH>()
+
+=item int B<AL_GFX_HW_HLINE>()
+
+=item int B<AL_GFX_HW_HLINE_COPY_PATTERN>()
+
+=item int B<AL_GFX_HW_HLINE_SOLID_PATTERN>()
+
+=item int B<AL_GFX_HW_HLINE_XOR>()
+
+=item int B<AL_GFX_HW_LINE>()
+
+=item int B<AL_GFX_HW_LINE_XOR>()
+
+=item int B<AL_GFX_HW_MEM_BLIT>()
+
+=item int B<AL_GFX_HW_MEM_BLIT_MASKED>()
+
+=item int B<AL_GFX_HW_SYS_TO_VRAM_BLIT>()
+
+=item int B<AL_GFX_HW_SYS_TO_VRAM_BLIT_MASKED>()
+
+=item int B<AL_GFX_HW_TRIANGLE>()
+
+=item int B<AL_GFX_HW_TRIANGLE_XOR>()
+
+=item int B<AL_GFX_HW_VRAM_BLIT>()
+
+=item int B<AL_GFX_HW_VRAM_BLIT_MASKED>()
+
+=item int B<AL_GFX_MODEX>()
+
+=item int B<AL_GFX_PHOTON>()
+
+=item int B<AL_GFX_PHOTON_DIRECT>()
+
+=item int B<AL_GFX_SAFE>()
+
+=item int B<AL_GFX_TEXT>()
+
+=item int B<AL_GFX_VBEAF>()
+
+=item int B<AL_GFX_VESA1>()
+
+=item int B<AL_GFX_VESA2B>()
+
+=item int B<AL_GFX_VESA2L>()
+
+=item int B<AL_GFX_VESA3>()
+
+=item int B<AL_GFX_VGA>()
+
+=item int B<AL_GFX_XDGA>()
+
+=item int B<AL_GFX_XDGA2>()
+
+=item int B<AL_GFX_XDGA2_SOFT>()
+
+=item int B<AL_GFX_XDGA_FULLSCREEN>()
+
+=item int B<AL_GFX_XTENDED>()
+
+=item int B<AL_GFX_XWINDOWS>()
+
+=item int B<AL_GFX_XWINDOWS_FULLSCREEN>()
+
+=item int B<AL_JOYFLAG_ANALOGUE>()
+
+=item int B<AL_JOYFLAG_CALIBRATE>()
+
+=item int B<AL_JOYFLAG_CALIB_ANALOGUE>()
+
+=item int B<AL_JOYFLAG_CALIB_DIGITAL>()
+
+=item int B<AL_JOYFLAG_DIGITAL>()
+
+=item int B<AL_JOYFLAG_SIGNED>()
+
+=item int B<AL_JOYFLAG_UNSIGNED>()
+
+=item int B<AL_JOY_HAT_CENTER>()
+
+=item int B<AL_JOY_HAT_CENTRE>()
+
+=item int B<AL_JOY_HAT_DOWN>()
+
+=item int B<AL_JOY_HAT_LEFT>()
+
+=item int B<AL_JOY_HAT_RIGHT>()
+
+=item int B<AL_JOY_HAT_UP>()
+
+=item int B<AL_JOY_TYPE_2PADS>()
+
+=item int B<AL_JOY_TYPE_4BUTTON>()
+
+=item int B<AL_JOY_TYPE_6BUTTON>()
+
+=item int B<AL_JOY_TYPE_8BUTTON>()
+
+=item int B<AL_JOY_TYPE_AUTODETECT>()
+
+=item int B<AL_JOY_TYPE_DB9_LPT1>()
+
+=item int B<AL_JOY_TYPE_DB9_LPT2>()
+
+=item int B<AL_JOY_TYPE_DB9_LPT3>()
+
+=item int B<AL_JOY_TYPE_FSPRO>()
+
+=item int B<AL_JOY_TYPE_GAMEPAD_PRO>()
+
+=item int B<AL_JOY_TYPE_GRIP>()
+
+=item int B<AL_JOY_TYPE_GRIP4>()
+
+=item int B<AL_JOY_TYPE_IFSEGA_ISA>()
+
+=item int B<AL_JOY_TYPE_IFSEGA_PCI>()
+
+=item int B<AL_JOY_TYPE_IFSEGA_PCI_FAST>()
+
+=item int B<AL_JOY_TYPE_LINUX_ANALOGUE>()
+
+=item int B<AL_JOY_TYPE_N64PAD_LPT1>()
+
+=item int B<AL_JOY_TYPE_N64PAD_LPT2>()
+
+=item int B<AL_JOY_TYPE_N64PAD_LPT3>()
+
+=item int B<AL_JOY_TYPE_NONE>()
+
+=item int B<AL_JOY_TYPE_PSXPAD_LPT1>()
+
+=item int B<AL_JOY_TYPE_PSXPAD_LPT2>()
+
+=item int B<AL_JOY_TYPE_PSXPAD_LPT3>()
+
+=item int B<AL_JOY_TYPE_SIDEWINDER>()
+
+=item int B<AL_JOY_TYPE_SIDEWINDER_AG>()
+
+=item int B<AL_JOY_TYPE_SNESPAD_LPT1>()
+
+=item int B<AL_JOY_TYPE_SNESPAD_LPT2>()
+
+=item int B<AL_JOY_TYPE_SNESPAD_LPT3>()
+
+=item int B<AL_JOY_TYPE_STANDARD>()
+
+=item int B<AL_JOY_TYPE_TURBOGRAFX_LPT1>()
+
+=item int B<AL_JOY_TYPE_TURBOGRAFX_LPT2>()
+
+=item int B<AL_JOY_TYPE_TURBOGRAFX_LPT3>()
+
+=item int B<AL_JOY_TYPE_WIN32>()
+
+=item int B<AL_JOY_TYPE_WINGEX>()
+
+=item int B<AL_JOY_TYPE_WINGWARRIOR>()
+
+=item int B<AL_KB_ACCENT1_FLAG>()
+
+=item int B<AL_KB_ACCENT2_FLAG>()
+
+=item int B<AL_KB_ACCENT3_FLAG>()
+
+=item int B<AL_KB_ACCENT4_FLAG>()
+
+=item int B<AL_KB_ALT_FLAG>()
+
+=item int B<AL_KB_CAPSLOCK_FLAG>()
+
+=item int B<AL_KB_CTRL_FLAG>()
+
+=item int B<AL_KB_EXTENDED>()
+
+=item int B<AL_KB_INALTSEQ_FLAG>()
+
+=item int B<AL_KB_LWIN_FLAG>()
+
+=item int B<AL_KB_MENU_FLAG>()
+
+=item int B<AL_KB_NORMAL>()
+
+=item int B<AL_KB_NUMLOCK_FLAG>()
+
+=item int B<AL_KB_RWIN_FLAG>()
+
+=item int B<AL_KB_SCROLOCK_FLAG>()
+
+=item int B<AL_KB_SHIFT_FLAG>()
+
+=item int B<AL_KEY_0>()
+
+=item int B<AL_KEY_0_PAD>()
+
+=item int B<AL_KEY_1>()
+
+=item int B<AL_KEY_1_PAD>()
+
+=item int B<AL_KEY_2>()
+
+=item int B<AL_KEY_2_PAD>()
+
+=item int B<AL_KEY_3>()
+
+=item int B<AL_KEY_3_PAD>()
+
+=item int B<AL_KEY_4>()
+
+=item int B<AL_KEY_4_PAD>()
+
+=item int B<AL_KEY_5>()
+
+=item int B<AL_KEY_5_PAD>()
+
+=item int B<AL_KEY_6>()
+
+=item int B<AL_KEY_6_PAD>()
+
+=item int B<AL_KEY_7>()
+
+=item int B<AL_KEY_7_PAD>()
+
+=item int B<AL_KEY_8>()
+
+=item int B<AL_KEY_8_PAD>()
+
+=item int B<AL_KEY_9>()
+
+=item int B<AL_KEY_9_PAD>()
+
+=item int B<AL_KEY_A>()
+
+=item int B<AL_KEY_ABNT_C1>()
+
+=item int B<AL_KEY_ALT>()
+
+=item int B<AL_KEY_ALTGR>()
+
+=item int B<AL_KEY_ASTERISK>()
+
+=item int B<AL_KEY_AT>()
+
+=item int B<AL_KEY_B>()
+
+=item int B<AL_KEY_BACKSLASH>()
+
+=item int B<AL_KEY_BACKSLASH2>()
+
+=item int B<AL_KEY_BACKSPACE>()
+
+=item int B<AL_KEY_C>()
+
+=item int B<AL_KEY_CAPSLOCK>()
+
+=item int B<AL_KEY_CIRCUMFLEX>()
+
+=item int B<AL_KEY_CLOSEBRACE>()
+
+=item int B<AL_KEY_COLON>()
+
+=item int B<AL_KEY_COLON2>()
+
+=item int B<AL_KEY_COMMA>()
+
+=item int B<AL_KEY_CONVERT>()
+
+=item int B<AL_KEY_D>()
+
+=item int B<AL_KEY_DEL>()
+
+=item int B<AL_KEY_DEL_PAD>()
+
+=item int B<AL_KEY_DOWN>()
+
+=item int B<AL_KEY_E>()
+
+=item int B<AL_KEY_END>()
+
+=item int B<AL_KEY_ENTER>()
+
+=item int B<AL_KEY_ENTER_PAD>()
+
+=item int B<AL_KEY_EQUALS>()
+
+=item int B<AL_KEY_ESC>()
+
+=item int B<AL_KEY_F>()
+
+=item int B<AL_KEY_F1>()
+
+=item int B<AL_KEY_F10>()
+
+=item int B<AL_KEY_F11>()
+
+=item int B<AL_KEY_F12>()
+
+=item int B<AL_KEY_F2>()
+
+=item int B<AL_KEY_F3>()
+
+=item int B<AL_KEY_F4>()
+
+=item int B<AL_KEY_F5>()
+
+=item int B<AL_KEY_F6>()
+
+=item int B<AL_KEY_F7>()
+
+=item int B<AL_KEY_F8>()
+
+=item int B<AL_KEY_F9>()
+
+=item int B<AL_KEY_G>()
+
+=item int B<AL_KEY_H>()
+
+=item int B<AL_KEY_HOME>()
+
+=item int B<AL_KEY_I>()
+
+=item int B<AL_KEY_INSERT>()
+
+=item int B<AL_KEY_J>()
+
+=item int B<AL_KEY_K>()
+
+=item int B<AL_KEY_KANA>()
+
+=item int B<AL_KEY_KANJI>()
+
+=item int B<AL_KEY_L>()
+
+=item int B<AL_KEY_LCONTROL>()
+
+=item int B<AL_KEY_LEFT>()
+
+=item int B<AL_KEY_LSHIFT>()
+
+=item int B<AL_KEY_LWIN>()
+
+=item int B<AL_KEY_M>()
+
+=item int B<AL_KEY_MAX>()
+
+=item int B<AL_KEY_MENU>()
+
+=item int B<AL_KEY_MINUS>()
+
+=item int B<AL_KEY_MINUS_PAD>()
+
+=item int B<AL_KEY_MODIFIERS>()
+
+=item int B<AL_KEY_N>()
+
+=item int B<AL_KEY_NOCONVERT>()
+
+=item int B<AL_KEY_NUMLOCK>()
+
+=item int B<AL_KEY_O>()
+
+=item int B<AL_KEY_OPENBRACE>()
+
+=item int B<AL_KEY_P>()
+
+=item int B<AL_KEY_PAUSE>()
+
+=item int B<AL_KEY_PGDN>()
+
+=item int B<AL_KEY_PGUP>()
+
+=item int B<AL_KEY_PLUS_PAD>()
+
+=item int B<AL_KEY_PRTSCR>()
+
+=item int B<AL_KEY_Q>()
+
+=item int B<AL_KEY_QUOTE>()
+
+=item int B<AL_KEY_R>()
+
+=item int B<AL_KEY_RCONTROL>()
+
+=item int B<AL_KEY_RIGHT>()
+
+=item int B<AL_KEY_RSHIFT>()
+
+=item int B<AL_KEY_RWIN>()
+
+=item int B<AL_KEY_S>()
+
+=item int B<AL_KEY_SCRLOCK>()
+
+=item int B<AL_KEY_SLASH>()
+
+=item int B<AL_KEY_SLASH_PAD>()
+
+=item int B<AL_KEY_SPACE>()
+
+=item int B<AL_KEY_STOP>()
+
+=item int B<AL_KEY_T>()
+
+=item int B<AL_KEY_TAB>()
+
+=item int B<AL_KEY_TILDE>()
+
+=item int B<AL_KEY_U>()
+
+=item int B<AL_KEY_UP>()
+
+=item int B<AL_KEY_V>()
+
+=item int B<AL_KEY_W>()
+
+=item int B<AL_KEY_X>()
+
+=item int B<AL_KEY_Y>()
+
+=item int B<AL_KEY_YEN>()
+
+=item int B<AL_KEY_Z>()
+
+=item int B<AL_MASK_COLOR_15>()
+
+=item int B<AL_MASK_COLOR_16>()
+
+=item int B<AL_MASK_COLOR_24>()
+
+=item int B<AL_MASK_COLOR_32>()
+
+=item int B<AL_MASK_COLOR_8>()
+
+=item int B<AL_MIDI_2XOPL2>()
+
+=item int B<AL_MIDI_ALSA>()
+
+=item int B<AL_MIDI_AUTODETECT>()
+
+=item int B<AL_MIDI_AWE32>()
+
+=item int B<AL_MIDI_BEOS>()
+
+=item int B<AL_MIDI_DIGMID>()
+
+=item int B<AL_MIDI_MPU>()
+
+=item int B<AL_MIDI_NONE>()
+
+=item int B<AL_MIDI_OPL2>()
+
+=item int B<AL_MIDI_OPL3>()
+
+=item int B<AL_MIDI_OSS>()
+
+=item int B<AL_MIDI_QUICKTIME>()
+
+=item int B<AL_MIDI_SB_OUT>()
+
+=item int B<AL_MIDI_TRACKS>()
+
+=item int B<AL_MIDI_VOICES>()
+
+=item int B<AL_MIDI_WIN32MAPPER>()
+
+=item int B<AL_PLAYMODE_BACKWARD>()
+
+=item int B<AL_PLAYMODE_BIDIR>()
+
+=item int B<AL_PLAYMODE_FORWARD>()
+
+=item int B<AL_PLAYMODE_LOOP>()
+
+=item int B<AL_PLAYMODE_PLAY>()
+
+=item int B<AL_SWITCH_AMNESIA>()
+
+=item int B<AL_SWITCH_BACKAMNESIA>()
+
+=item int B<AL_SWITCH_BACKGROUND>()
+
+=item int B<AL_SWITCH_IN>()
+
+=item int B<AL_SWITCH_NONE>()
+
+=item int B<AL_SWITCH_OUT>()
+
+=item int B<AL_SWITCH_PAUSE>()
+
+=item int B<AL_SYSTEM_AUTODETECT>()
+
+=item int B<AL_SYSTEM_BEOS>()
+
+=item int B<AL_SYSTEM_DIRECTX>()
+
+=item int B<AL_SYSTEM_DOS>()
+
+=item int B<AL_SYSTEM_LINUX>()
+
+=item int B<AL_SYSTEM_MACOS>()
+
+=item int B<AL_SYSTEM_NONE>()
+
+=item int B<AL_SYSTEM_QNX>()
+
+=item int B<AL_SYSTEM_XWINDOWS>()
+
+=back
+
+=for comment END_AUTO_DEFINE
+
+=head1 AUTHOR
+
+Allegro has many contributors, a list of which can be found on the Allegro 
+website.
+
+This Perl module and accompanying documentation is by Colin O'Leary 
+<colino@cpan.org>.
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library is copyright its authors, and is giftware.  See 
+http://alleg.sf.net for more information.
+
+=head1 HISTORY
+
+=over
+
+=item B<0.02>   ?
+
+First official release.
+
+=item B<0.01>   Mon Oct  6 23:23:43 2003
+
+First snapshot released;  semi-complete.
+
+=item B<0.00>   Thu Nov 28 18:35:59 2002
+
+Original version; created by h2xs 1.21 with options -A -n Allegro
+
+=back
+
+=head1 SEE ALSO
+
+=head2 Websites
+
+=over
+
+=item Allegro-Perl website - L<http://alperl.mx3.org>
+
+=item Allegro website - L<http://alleg.sf.net>
+
+=back
+
+=head2 Object Manual Pages
+
+=over
+
+=item B<Allegro::Bitmap>
+
+=item B<Allegro::Datafile>
+
+=item B<Allegro::Display>
+
+=item B<Allegro::Font>
+
+=item B<Allegro::Joystick>
+
+=item B<Allegro::Keyboard>
+
+=item B<Allegro::MIDI>
+
+=item B<Allegro::Mouse>
+
+=item B<Allegro::Sample>
+
+=item B<Allegro::Timer>
+
+=back

@@ -1,0 +1,109 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro::Timer - Allegro Timer routines
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   sub callback { $i++; }
+
+   $al = Allegro->new or die;
+
+   $timer = $al->Timer(code     => \&callback,
+                       interval => 0.10);
+
+   while($i > 0) {
+      print "timer was called\n";
+      $timer->poll;
+   }
+
+=head1 DESCRIPTION
+
+Allegro::Timer provides an object-oriented interface to the Allegro timer 
+related routines.
+
+A timer object, after created will call its callback function at a certain 
+interval until stopped.
+
+Currently, Timers must be polled for the callback function to be called.  
+A thread-based or SIGALRM-based Timer implementation may be included in 
+the future.  See B<poll> below.
+
+=head1 METHODS
+
+=over
+
+=item B<new> - create new timer
+
+Creates a new timer object.  Returns an Allegro::Timer object on success, 
+or undef on error.
+
+   $timer = $al->Timer(code     => \&callback,
+                       interval => 1.0,
+                       param    => $param,
+                       defer    => 0);
+
+=over
+
+=item I<code> - callback code reference (required)
+
+Code reference to be called every after every I<interval> seconds.
+
+=item I<interval> - callback interval (required)
+
+Time (in seconds) between each timer callback.
+
+=item I<param> - parameter (optional)
+
+Single parameter to be passed to callback function.
+
+=item I<defer> - defer timer start (optional)
+
+If this is set, the timer will not start until the B<start> method is 
+called.  Not set by default.
+
+=back
+
+=item B<poll> - updates timer
+
+This method must be called continously to call the code specified by 
+B<new>.
+
+=item B<start> - starts timer
+
+Starts the timer.  This will usually be called on timer creation unless 
+you specify to not start the timer.
+
+=item B<stop> - disables timer
+
+Stops the timer.  The timer may be started again with another call to 
+B<start>.
+
+=back
+
+=head1 AUTHOR
+
+Colin O'Leary <colino@cpan.org>
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library is copyright its authors, and is giftware.  See 
+http://alleg.sf.net for more information.
+
+=head1 SEE ALSO
+
+=over
+
+=back
+

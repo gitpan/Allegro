@@ -1,0 +1,106 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro::Sound - Allegro sound initialization/volume routines
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   $al    = Allegro->new() or die;
+   $sound = $al->Sound() or die $al->error;
+
+   $sound->volume(digi => 50);
+
+=head1 DESCRIPTION
+
+This module includes the routines to initialize the Allegro sound card 
+drivers.
+
+Both Allegro::Sample and Allegro::MIDI will use this module implicitly, so 
+you don't need a "use Allegro::Sound".
+
+=head1 METHODS
+
+=over
+
+=item B<new>
+
+Installs the digital sound and MIDI drivers.
+
+   $al->Sound(digi => 'auto',
+              midi => 'none');
+
+Currently only C<auto> and C<none> are valid drivers.
+
+=over
+
+=item I<digi>
+
+Desired digital card driver.  Defaults to 'auto'.
+
+=item I<midi>
+
+Desired MIDI driver.  Defaults to 'none'.
+
+=back
+
+=item B<shutdown>
+
+Uninstalls both the digital sound and MIDI drivers.
+
+   $sound->shutdown;
+
+=item B<volume>
+
+Sets global volume.
+
+   $sound->volume(digi => $digital_volume,
+                  midi => $midi_volume);
+
+=over
+
+=item I<digi>
+
+Digital sound volume.  Valid values are 0-255.
+
+=item I<midi>
+
+MIDI volume.  Valid values are 0-255.
+
+=back
+
+Either may be omitted to keep the current volume.
+
+=back
+
+=head1 AUTHOR
+
+Colin O'Leary <colino@cpan.org>
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library is copyright its authors, and is giftware.  See 
+http://alleg.sf.net for more information.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Allegro> - Base Allegro routines
+
+=item L<Allegro::Sample> - Digital sound routines
+
+=item L<Allegro::MIDI> - MIDI routines
+
+=back
+

@@ -1,0 +1,590 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro::Bitmap - Allegro Bitmap routines
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   $al = Allegro->new() or die;
+   $screen = $al->Display(width => 640, height => 480);
+
+   # Display images given on command line
+   for $file (@ARGV) {
+      $bmp = $screen->Bitmap(file => $file) or die;
+      $w = $bmp->width;
+      $h = $bmp->height;
+
+      $screen->clear();
+      $screen->blit($bmp);
+      $screen->text(x => 10, y => 10, text => "$file: $w x $h");
+      $al->sleep(10);
+   }
+
+=head1 DESCRIPTION
+
+The Allegro::Bitmap module provides an object-oriented interface to the 
+Allegro bitmap related routines.
+
+Allegro::Bitmap is included automatically by the Allegro module, so an 
+explicit C<use Allegro::Bitmap> is not needed.
+
+=head1 METHODS
+
+=over
+
+=item B<new> - create a new bitmap
+
+This method creates a new bitmap object, either by creating a new bitmap 
+in memory, or by loading a bitmap from disk.
+
+This method can be used in three ways:
+
+=over
+
+=item B<Loading an image from disk>
+
+   $bmp = $disp->Bitmap(file => "test.bmp");
+
+This routine will load any file format supported by Allegro (BMP, PCX, 
+LBM, TGA).  PNG and JPEG support is also available if the GD module can be 
+found.  C<$Allegro::GD> will be set if GD is available.
+
+=item B<Creating a new bitmap>
+
+   $bmp = $disp->Bitmap(width  => 400,
+                        height => 100,
+                        depth  => 32);
+
+=over
+
+=item I<width> (required)
+
+Width of bitmap in pixels.
+
+=item I<height> (required)
+
+Height of bitmap in pixels.
+
+=item I<depth> (optional)
+
+Depth of bitmap in pixels.  Defaults to depth of display.
+
+=item I<mode> (optional)
+
+Type of bitmap to create.
+
+=over
+
+=item C<memory>
+
+The bitmap will be held in main memory, and can be any depth.  It will be 
+converted to the display format when copied to the display.  This is the 
+default.
+
+=item C<video>
+
+Video bitmaps are created in the graphic card's video memory, and must be 
+the same depth as the display.  Video bitmaps will be slower to read, but 
+will be quicker to blit to the screen if your graphics device is 
+accelerated.  Video bitmaps must be in the same depth as the display.
+
+=item C<system>
+
+System bitmaps may be stored in a platform independent method, but are 
+stored in main memory.  They must also be the same depth as the screen.
+
+=back
+
+=back
+
+=item B<Creating a Sub-bitmap>
+
+Sub-bitmaps share their image with the parent bitmap.  Therefore modifying 
+the sub-bitmap will also modify the parent bitmap.  Sub-bitmaps can be 
+located at an arbitrary offset in the parent bitmap, and vary in size from 
+the parent.
+
+   $bmp = $disp->Bitmap(parent => $disp,
+                        x      => 10,
+                        y      => 10,
+                        width  => $disp->width - 20,
+                        height => $disp->height - 20);
+
+=over
+
+=item I<parent> (required)
+
+The parent Bitmap object.  May be a memory bitmap, video bitmap, system 
+bitmap or a Display object.
+
+=item I<x> (required)
+
+X offset in parent bitmap.
+
+=item I<y> (required)
+
+Y offset in parent bitmap.
+
+=item I<width>, I<w> (required)
+
+Width of sub-bitmap.
+
+=item I<height>, I<h> (required)
+
+Height of sub-bitmap.
+
+=back
+
+=back
+
+=item B<acquire>
+
+Acquires a video memory bitmap prior to drawing onto it.  These calls are 
+not strictly required, because the drawing routines will automatically 
+acquire the bitmap before accessing it, but on some platforms you may get 
+much better performance if you acquire the screen just once at the start 
+of your main redraw function, and only release it when the drawing is 
+completely finished.
+
+=item B<release>
+
+Releases a bitmap that was previously locked by calling C<acquire>.  If 
+the bitmap was acquired multiple times, you must release it the same 
+number of times before it will truly be unlocked.
+
+=item B<clear>
+
+Clears a bitmap.
+
+   $bmp->clear(color => $color);
+
+I<color> is optional, and defaults to black.
+
+=item B<putpixel>
+
+Sets a pixel to a certain color.
+
+   $bmp->putpixel(x     => $x,
+                  y     => $y,
+                  color => 'blue');
+
+Note that if you don't specify a color the default is to pick one at 
+random.
+
+=item B<getpixel>
+
+Returns the color of a certain pixel in a format suitable to passing as 
+I<color> to any drawing primitives.
+
+   $color = $bmp->getpixel(x => $x,
+                           y => $y);
+
+=item B<line>
+
+Draws a line.
+
+   $bmp->line(x1    => $x1,
+              y1    => $y1,
+              x2    => $x2,
+              y2    => $y2,
+              color => 'white');
+
+=over
+
+=item I<x1>, I<x> (required)
+
+X coordinate of origin.
+
+=item I<y1>, I<y> (required)
+
+Y coordinate of origin.
+
+=item I<x2> (optional)
+
+X coordinate of second point.  Defaults to I<x1>.
+
+=item I<y2> (optional)
+
+Y coordinate of second point.  defaults to I<y1>.
+
+=item I<color> (optional)
+
+Color of line to draw.
+
+=back
+
+=item B<triangle>
+
+Draws a triangle.
+
+   $bmp->triangle(x1 => $x1, y1 => $y1,
+                  x2 => $x2, y2 => $y2,
+                  x3 => $x3, y3 => $y3,
+                  color => $color);
+
+=item B<rect>
+
+Draws a rectangle.
+
+   $bmp->rect(x      => $x,
+              y      => $y,
+              width  => $width,
+              height => $height,
+              color  => $fill,
+              border => $border);
+
+=over
+
+=item I<x> (required)
+
+X coordinate of origin.
+
+=item I<y> (required)
+
+Y coordinate of origin.
+
+=item I<width> (optional)
+
+Width of rectangle.
+
+=item I<height> (optional)
+
+Height of rectangle.
+
+=item I<x2> (optional)
+
+X coordinate of bottom right corner.
+
+=item I<y2> (optional)
+
+Y coordinate of bottom right corner.
+
+=item I<color> (optional)
+
+Color with which to fill rectangle.
+
+=item I<border> (optional)
+
+Color with which to draw border of rectangle.
+
+=back
+
+Either the I<width> and I<height> or the I<x2> and I<y2> options must be 
+specified.
+
+=item B<ellipse>
+
+Draws an ellipse.
+
+   $bmp->ellipse(x      => $x,
+                 y      => $y,
+                 width  => $rx,
+                 height => $ry,
+                 color  => $fill,
+                 border => $border);
+
+=over
+
+=item I<x> (required)
+
+X coordinate of center of ellipse.
+
+=item I<y> (required)
+
+Y coordinate of center of ellipse.
+
+=item I<width>, I<w> (optional)
+
+Radius along x axis.
+
+=item I<height>, I<h> (optional)
+
+Radius along y axis.
+
+=item I<radius> (optional)
+
+Radius of x and y axis.
+
+=item I<color> (optional)
+
+Color with which to fill ellipse.
+
+=item I<border> (optional)
+
+Color with which to draw ellipse border.
+
+=back
+
+Either I<width> and I<height> or I<radius> is required.
+
+=item B<circle>
+
+Alias for ellipse.
+
+=item B<floodfill>
+
+Floodfills an area starting at the specified point.
+
+   $bmp->floodfill(x     => $x,
+                   y     => $y,
+                   color => $c);
+
+=item B<text>
+
+Draws text onto bitmap.
+
+   $bmp->text(x     => $x,
+              y     => $y,
+              font  => $font,
+              color => $color,
+              bg    => $bg,
+              align => 'left',
+              text  => "Hello World");
+
+=over
+
+=item I<x> (optional)
+
+X coordinate.  Defaults to 0.
+
+=item I<y> (optional)
+
+Y coordinate.  Defaults to 0.
+
+=item I<width>, I<w> (optional)
+
+Width of text if I<align> is set to C<justify>.
+
+=item I<font> (optional)
+
+Font object to use as font.
+
+=item I<color>, I<foreground>, I<fg> (optional)
+
+Color in which to draw text.
+
+=item I<background>, I<bg> (optional)
+
+Background color to use.
+
+=item I<align> (optional)
+
+=over
+
+=item B<left>
+
+Aligns text to left, starting at (I<x>, I<y>).
+
+=item B<right>
+
+Aligns text to right, ending at (I<x>, I<y>).
+
+=item B<center>, B<centre>
+
+Centers text around (I<x>, I<y>).
+
+=item B<justify>
+
+Starts text at (I<x>, I<y>), ending at (I<x> + I<width>, I<y>).
+
+=back
+
+=back
+
+=item B<polygon>
+
+Draws a polygon.
+
+   $bmp->polygon($color,
+                 $x1, $y1,
+                 $x2, $y2,
+                 $x3, $y3,
+                 ...);
+
+   $bmp->polygon($x1, $y1,
+                 $x2, $y2,
+                 $x3, $y3,
+                 ...);
+
+=item B<blit_to>
+
+Copies part of or all of the bitmap onto another bitmap or display.
+
+   # These calls are equivalent.
+   $bmp->blit_to($screen, ...);
+   $screen->blit($bmp, ...);
+
+See B<blit> below for a full description.
+
+=item B<blit>
+
+Copies part or all of a bitmap onto this one
+
+   $bmp->blit($source,
+              sx     => $sx,
+              sy     => $sy,
+              dx     => $dx,
+              dy     => $dy,
+              sw     => $sw,
+              sh     => $sh,
+              dw     => $dw,
+              dh     => $dh,
+              masked => $masked,
+              rotate => $angle,
+              origin => [$x, $y]);
+
+Blender support is not yet implemented (translucency, lighting, etc).
+
+=over
+
+=item I<$source> (required)
+
+Source Allegro::Bitmap object.
+
+=item I<sx> (optional)
+
+X coordinate in source image.  Defaults to 0.
+
+=item I<sy> (optional)
+
+Y coordinate in source image.  Defaults to 0.
+
+=item I<dx>, I<x> (optional)
+
+X coordinate in destination image.  Defaults to 0.
+
+=item I<dy>, I<y> (optional)
+
+Y coordinate in destination image.  Defaults to 0.
+
+=item I<sw>, I<w>, I<width> (optional)
+
+Width of portion to blit.  Defaults to width of source image.
+
+=item I<sh>, I<h>, I<height> (optional)
+
+Height of portion to blit.  Defaults to height of source image.
+
+=item I<dw> (optional)
+
+Width of destination blit.  Defaults to width of source image.
+
+=item I<dh> (optional)
+
+Height of destination blit.  Defaults to height of source image.
+
+=begin comment
+
+UNIMPLEMENTED
+
+=item I<alpha> (optional)
+
+Alpha level to use in blit (0-255).  Defaults to 255.  Use B<source> to 
+use alpha information stored in the 32-bit source image.
+
+=end comment
+
+=item I<masked> (optional)
+
+Perform a masked blit (do not copy from source image where mask is set).
+
+=item I<rotate> (optional)
+
+Rotates the source bitmap before drawing.  The parameter should be between 
+0 and 1.  By default the origin of the rotation will be (0, 0).  Using a 
+rotated blit currently implies a masked blit.
+
+=item I<origin> (optional)
+
+When used with rotated blits, the origin around which to rotate.  Given as 
+an anonymous reference of the x and y coordinates of the pivot point.
+
+=back
+
+Examples:
+
+=over
+
+=item B<Standard blit>
+
+   $bmp->blit($source, x => 20, y => 20);
+
+Blits $source to $bmp at (20, 20) in $bmp.
+
+=item B<Stretched blit>
+
+   $bmp->blit($source, dw => 640, dh => 480);
+
+Stretches $source to 640x480 and copies to $bmp.
+
+=item B<Masked blit> (Transparent blit)
+
+   $bmp->blit($source, masked => 1);
+
+Copies $source to $bmp ignoring parts of $source that are masked out.
+
+=begin comment
+
+UNIMPLEMENTED
+
+=item B<Translucent blit>
+
+   $bmp->blit($source, alpha => $a);
+
+Copies $bmp to $source with an alpha value of $a.  Currently I<masked> is 
+implied by using a translucent blit.
+
+=end comment
+
+=item B<Combined>
+
+   $bmp->blit($source, dw     => $dest->{width},
+                       dh     => $dest->{height},
+                       masked => 1);
+
+The above operations can be combined in a single call.
+
+Be warned that temporary bitmaps may be created behind your back to 
+perform certain combinations.  Using different source and destination 
+widths/heights with a non-memory bitmap as a source, or masked blits with 
+a non-memory bitmap as a source (on certain hardware) will create a 
+temporary memory bitmap.  The same is true when converting between color 
+depths when using masked or stretched blits.
+
+Currently rotated blits can not be combined with stretched blits or blits 
+with an offset source (x, y).
+
+=back
+
+=back
+
+=head1 AUTHOR
+
+Colin O'Leary <colino@cpan.org>
+
+B<acquire> and B<release> descriptions are from the Allegro documentation.
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library and documentation is copyright its authors, and is 
+giftware.  See http://alleg.sf.net for more information.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Allegro> - Base Allegro routines
+
+=back
+

@@ -1,0 +1,190 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro::Joystick - Allegro joystick routines
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   $al = Allegro->new();
+
+   $joy = $al->Joystick() or die;
+
+   $b = $joy->buttons;
+   $s = $joy->sticks;
+
+   print "joystick as $b buttons, $s sticks.\n";
+
+   print "Hit button 1\n";
+
+   while(!$joy->button(0)) { }
+
+   while(1)
+   {
+      ($x,  $y)  = $joy->position(0);
+      ($b0, $b1) = $joy->button;
+
+      print "x=$x y=$y b0=$b0 b1=$b1\n";
+      sleep 1;
+   }
+
+=head1 DESCRIPTION
+
+Allegro::Joystick is an interface to the Allegro joystick routines.  
+
+Polling is required, but will be done automatically by the B<button> and 
+B<position> methods.
+
+=head1 METHODS
+
+=over
+
+=item B<new> - create a new joystick object
+
+Creates a joystick object corresponding to a joystick.
+
+   $joy = $al->Joystick(joystick => 0,
+                        mode     => 'digital');
+
+Returns an Allegro::Joystick object on success, or undef otherwise.
+
+=over
+
+=item I<joystick> (optional)
+
+Joystick index to use.  If not supplied, new() will return an object
+corresponding to the next available joystick, or undef if no more are
+available.
+
+=item I<mode> (optional)
+
+Force analog/digital mode.  Defaults to attempting to automatically 
+determine whether joystick is digital or analog.
+
+=back
+
+=item B<buttons> - returns number of buttons
+
+Returns the total number of buttons.
+
+=item B<sticks> - returns number of sticks
+
+Returns the number of sticks.  Each stick may have one or more axes. 
+
+=item B<axes> - returns number of axes
+
+Returns the number of axes on a certain stick.
+
+   $a = $joy->axes(0);   # Number of axes on stick 0.
+
+Defaults to the first stick.
+
+=item B<button_name>
+
+Returns a text description for a button, or a list of all button names.
+
+   $name  = $joy->button_name(0);
+   @names = $jot->button_name;
+
+=item B<stick_name>
+
+Returns a text description for a stick, or a list of all stick names.
+
+   $name  = $joy->stick_name(0);
+   @names = $joy->stick_name;
+
+=item B<axis_name>
+
+Returns a text description for an axis, or a list of all axis names.
+
+   $name  = $joy->axis_name(I<stick>, 0);
+   @names = $joy->axis_name(I<stick>);
+
+=item B<poll> - poll joystick
+
+   $joy->poll;
+
+Polls the joystick driver and updates the object's internal data.  This 
+will be called automatically by B<button> and B<position>, but is required
+to be done manually to access the object directly.
+
+=item B<button> - get button data
+
+This method retrieves the current state of the joystick buttons.  It can 
+be called with one optional parameter, the button number.
+
+This will automatically poll the joystick driver.
+
+   $b1 = $joy->button(0);
+   $b2 = $joy->button(1);
+
+This allows access to a certain button on the joystick.
+
+   @buttons = $joy->button;
+
+This allows access to all buttons at once, in an array.
+
+=item B<position> - get position information
+
+Retrieves current position of one or more joystick axes.  Like B<button>, 
+this can retrieve either a specific stick/axis combination or a set of 
+many sticks and axes.
+
+This will automatically poll the joystick driver.
+
+The first argument is the stick number and the second is the axis number.
+
+   $lr = $joy->position(0, 0);
+   $ud = $joy->position(0, 1);
+
+Set $lr to the left/right position and $ud to the up/down position.
+
+   @s1 = $joy->position(0);
+
+Returns an array containing the position of all the axes on the first 
+stick.
+
+   @s = $joy->position;
+
+Returns an array of array references containing position information for 
+each stick/axis combination.
+
+=item B<calibrate> - perform next calibrate operation
+
+Performs the next calibrate operation.  Returns 1 if more calibration 
+operations are needed, or undef if calibration is complete.
+
+=item B<calibrate_text> - get calibration text
+
+Returns a string suitable for printing to the user explaining the next
+calibration option.
+
+=back
+
+=head1 AUTHOR
+
+Colin O'Leary <colino@cpan.org>
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library is copyright its authors, and is giftware.  See 
+http://alleg.sf.net for more information.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Allegro> - Base Allegro routines
+
+=back
+

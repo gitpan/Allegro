@@ -1,0 +1,141 @@
+=begin comment
+
+$Id$
+
+=end comment
+
+=head1 NAME
+
+Allegro::Display - Allegro Display object
+
+=head1 SYNOPSIS
+
+   use Allegro;
+
+   $al = Allegro->new();
+   $display = $al->Display(width  => 640,
+                           height => 480);
+
+=head1 DESCRIPTION
+
+Allegro::Display provides an object used to access the full screen or 
+window bitmap.  It is anagalous to Allegro's C<screen> pointer.
+
+This class contains methods to create and destroy a new window/screen, as 
+well as methods to set the palette.
+
+=head1 METHODS
+
+The Display class inherits from the Bitmap class.  Therefore all Bitmap 
+methods will work on a Display object.
+
+=over
+
+=item B<new> - create a new display object
+
+Creates a new B<Allergo::Display> object.  This will set a graphics mode 
+and return an object that can be used as a normal B<Allegro::Bitmap> 
+object (it is a sub-class of Bitmap).
+
+   $disp = $al->Display(width    => 640,
+                        height   => 480,
+                        v_width  => 1024,
+                        v_height => 768,
+                        depth    => 24,
+                        mode     => 'window');
+
+The virtual width and height requested will not necessarily be what you 
+requested.  Use the B<v_width> and B<v_height> methods to check.  
+Similarly, if you don't specify I<width> and I<height>, use B<width> and 
+B<height> to find out the width and height.
+
+=over
+
+=item I<width>, I<w> (optional)
+
+Width of desired screen or window.
+
+=item I<height>, I<h> (optional)
+
+Height of desired screen or window.
+
+=item I<v_width>, I<vw> (optional)
+
+Desired virtual width of screen.  Defaults to I<width>.
+
+=item I<v_height>, I<vh> (optional)
+
+Desired virtual height of screen.  Defaults to I<height>.
+
+=item I<depth> (optional)
+
+Depth (in bits) of screen.  Defaults to whatever is convenient.  Therefore 
+you should always specify this if a certain bit depth is required.
+
+=item I<mode> (optional)
+
+Type of display to create.  Valid options are C<auto>, C<window>, and 
+C<fullscreen>.  Defaults to C<auto>.
+
+=back
+
+=item B<shutdown>
+
+Shuts down the display and either returns to text mode or destroys the 
+visible window, depending on platform.
+
+   $disp->shutdown;
+
+=item B<title>
+
+Sets the display window's title.  This method has no effect if the display 
+is in full screen mode or there are no window titles.  Returns the current 
+title.
+
+   $title = $disp->title;
+   $disp->title("Allegro Perl program");
+
+=item B<palette>
+
+Sets the current palette to the one supplied as an argument.  Returns the 
+current palette.  The supplied palette should be an B<Allegro::Palette> 
+object.
+
+   $old_pal = $disp->palette;
+   $disp->palette($new_pal);
+
+=item B<v_width>
+
+Retrieves virtual width of the screen.
+
+=item B<v_height>
+
+Retrieves virtual height of the screen.
+
+=back
+
+=head1 AUTHOR
+
+Colin O'Leary <colino@cpan.org>
+
+=head1 COPYRIGHT
+
+Copyright 2003 by Colin O'Leary.  All rights reserved.  This program is 
+free software;  you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+The Allegro library is copyright its authors, and is giftware.  See 
+http://alleg.sf.net for more information.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Allegro> - base Allegro routines
+
+=item L<Allegro::Bitmap> - Allegro bitmap routines
+
+=item L<Allegro::Palette> - Allegro palette routines
+
+=back
+
